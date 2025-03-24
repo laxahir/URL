@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+        <form id="shorten-form">
+            <div>
+                <label for="url">Enter URL:</label>
+                <input type="url" name="url" id="url" required>
+            </div>
+            <div>
+                <label for="url">Enter ShortCode:</label>
+                <input type="text" name="shortcode" id="shortcode" required>
+            </div>
+            <button type="submit">Shorten</button>
+        </form>
+
+        <h2>Shortened URLs</h2>
+        <ul id="shortened-urls"></ul>
+    </div>
+</body>
+<script>
+
+    const fetchShortURL = async () => {
+        const response = await fetch("/links");
+        const links = await response.json();
+        console.log("links:", links);
+
+        const list = document.getElementById("shortened-urls");
+        list.innerHTML = "";
+
+        for (const [shortenCode, url] of Object.entries(links)) {
+            const li = document.createElement('li');
+            const truncetedURL = url.length >= 30 ? `${url.slice(0, 30)}...` : url;
+            li.innerHTML = `<a href="/${shortenCode}" target="_blank">${window.location.origin}/${shortenCode}</a> - ${truncetedURL}`
+            // console.log(`${key}: ${value}`);
+            list.appendChild(li);
+
+        }
+
+    }
+
+    document.getElementById('shorten-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const form_data = new FormData(event.target)
+        const url = form_data.get('url')
+        const shortenCode = form_data.get('shortcode')
+        console.log(url, shortenCode);
+
+        try {
+            const response = await fetch("/shorten", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url, shortenCode })
+            });
+
+            if (response.ok) {
+                fetchShortURL();
+                alert("form submitted succssfully");
+                event.target.reset();
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    })
+
+    fetchShortURL();
+</script>
+
+</html>
